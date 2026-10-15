@@ -7,16 +7,21 @@ def read_rows(lines: list[str]) -> list[dict]:
         if not line:
             continue
 
+        # Разбиваем строку по запятой
         f = [value.strip() for value in line.split(",")]
 
+        # Если заголовок еще не задан, берем текущую строку как заголовок
         if not header:
             header = f
             continue
+            
+        # Пропускаем строки, где количество элементов не совпадает с заголовком
         if len(f) != len(header):
             continue
-
+            
+        # Создаем словарь и добавляем в список. Используем 'f', а не 'parts'
         rows.append(dict(zip(header, f)))
-
+        
     return rows
 
 
@@ -29,20 +34,27 @@ def count_types(rows: list[dict]) -> dict:
 
 
 def total_minutes(rows: list[dict], kind: str) -> float:
-    t = 0.0
+    total = 0.0
     for row in rows:
-        if row.get('тип', None) != kind:
+        if row.get('тип') != kind:
             continue
+            
+        # Безопасно получаем значение и заменяем запятую на точку для float
+        minutes_str = row.get('минуты', '0').replace(',', '.')
         try:
-            minutes =  float(row['минуты'].replace(",", "."))
+            total += float(minutes_str)
         except ValueError:
+            # Если не удалось преобразовать в число (например, пустая строка), пропускаем
             continue
-        t += minutes
-    return round(t, 1)
+            
+    return round(total, 1)
 
 
 def to_csv(counts: dict) -> str:
     lines = ["тип,количество"]
-    for kind in sorted(counts):
+
+    # Убираем двойной цикл, оставляем один проход по отсортированным ключам
+    for kind in sorted(counts.keys()):
         lines.append(f"{kind},{counts[kind]}")
+        
     return "\n".join(lines) + "\n"
